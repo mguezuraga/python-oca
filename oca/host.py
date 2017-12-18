@@ -99,7 +99,7 @@ class Host(PoolElement):
         """
         Mark this host as offline
         """
-        self.client.call(self.METHODS['status'], self.id, 3)
+        self.client.call(self.METHODS['status'], self.id, 2)
 
     def update(self, template, merge=False):
         """
