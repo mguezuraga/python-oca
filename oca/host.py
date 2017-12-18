@@ -12,20 +12,22 @@ class Host(PoolElement):
         'info': 'host.info',
         'allocate': 'host.allocate',
         'delete': 'host.delete',
-        'enable': 'host.enable',
+        'status': 'host.status',
         'update': 'host.update'
     }
 
-    INIT = 0
-    MONITORING_MONITORED = 1  # Currently monitoring, previously MONITORED
-    MONITORED = 2
-    ERROR = 3
-    DISABLED = 4
-    MONITORING_ERROR = 5  # Currently monitoring, previously ERROR
-    MONITORING_INIT = 6  # Currently monitoring, previously initialized
-    MONITORING_DISABLED = 7  # Currently monitoring, previously DISABLED
+    INIT = 0 # Initial state for enabled hosts
+    MONITORING_MONITORED = 1  # Monitoring the host (from monitored)
+    MONITORED = 2 # The host has been successfully monitored
+    ERROR = 3 # An error ocurrer while monitoring the host
+    DISABLED = 4 # The host is disabled
+    MONITORING_ERROR = 5  # Monitoring the host (from error)
+    MONITORING_INIT = 6  # Monitoring the host (from init)
+    MONITORING_DISABLED = 7  # Monitoring the host (from disabled)
+    OFFLINE = 8  # The host is totally offline
     HOST_STATES = ['INIT', 'MONITORING_MONITORED', 'MONITORED', 'ERROR', 'DISABLED',
-                   'MONITORING_ERROR', 'MONITORING_INIT', 'MONITORING_DISABLED']
+                   'MONITORING_ERROR', 'MONITORING_INIT', 'MONITORING_DISABLED',
+                   'OFFLINE']
 
     SHORT_HOST_STATES = {
         'INIT': 'on',
@@ -36,6 +38,7 @@ class Host(PoolElement):
         'MONITORING_ERROR': 'on',
         'MONITORING_INIT': 'on',
         'MONITORING_DISABLED': 'on',
+        'OFFLINE': 'off',
     }
 
     XML_TYPES = {
@@ -44,7 +47,6 @@ class Host(PoolElement):
         'state': int,
         'im_mad': extractString,
         'vm_mad': extractString,
-        'vn_mad': extractString,
         'last_mon_time': int,
         'cluster': extractString,
         'cluster_id': int,
@@ -85,13 +87,19 @@ class Host(PoolElement):
         """
         Enable this host
         """
-        self.client.call(self.METHODS['enable'], self.id, True)
+        self.client.call(self.METHODS['status'], self.id, 0)
 
     def disable(self):
         """
         Disable this host.
         """
-        self.client.call(self.METHODS['enable'], self.id, False)
+        self.client.call(self.METHODS['status'], self.id, 1)
+
+    def offline(self):
+        """
+        Mark this host as offline
+        """
+        self.client.call(self.METHODS['status'], self.id, 3)
 
     def update(self, template, merge=False):
         """
